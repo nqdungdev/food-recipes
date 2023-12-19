@@ -1,52 +1,27 @@
-import Link from "next/link";
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-// import { useRouter } from "next/router";
 type Props = {
-  onPage: () => [number, Dispatch<SetStateAction<number>>];
   total: number;
   limit: number;
 };
 
-const Pagination = ({ onPage, total, limit }: Props) => {
-  const [page, setPage] = onPage();
+const Pagination = ({ total, limit }: Props) => {
   const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
   const { push } = useRouter();
-  const isFromUrl = useRef<boolean>(true);
-  // const [isFromUrl, setIsFromUrl] = useState(true);
+  const pathname = usePathname();
 
-  // const prevPage = page;
+  // Get a new searchParams string by merging the current
+  // searchParams with a provided key/value pair
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams);
+      params.set(name, value);
 
-  // useEffect(() => {
-  //   console.log(1);
-  //   if (isFromUrl.current) {
-  //     isFromUrl.current = false;
-  //     page && push(`?page=${page}`);
-  //     return;
-  //   }
-
-  //   isFromUrl.current = true;
-
-  //   return () => {};
-  // }, [page, push]);
-
-  // useEffect(() => {
-  //   console.log(searchParams.get("page"));
-  //   if (isFromUrl.current) {
-  //     searchParams.get("page") && setPage(Number(searchParams.get("page")));
-  //     isFromUrl.current = false;
-  //     return;
-  //   }
-  //   isFromUrl.current = true;
-
-  //   return () => {};
-  // }, [searchParams, setPage]);
+      return params.toString();
+    },
+    [searchParams]
+  );
 
   return (
     <nav className="flex w-full justify-center my-10">
@@ -54,8 +29,13 @@ const Pagination = ({ onPage, total, limit }: Props) => {
         <li>
           <button
             onClick={() => {
-              page > 1 && setPage(page - 1);
-              // push(`?page=${page - 1}`);
+              page > 1 &&
+                push(
+                  `${pathname}?${createQueryString(
+                    "page",
+                    (page - 1).toString()
+                  )}`
+                );
             }}
             className={`flex items-center justify-center px-3 h-8 ms-0 leading-tight border border-e-0 rounded-s-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white ${
               page <= 1 &&
@@ -83,8 +63,12 @@ const Pagination = ({ onPage, total, limit }: Props) => {
                     : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
                 }`}
                 onClick={() => {
-                  setPage(index + 1);
-                  // push(`?page=${index + 1}`);
+                  push(
+                    `${pathname}?${createQueryString(
+                      "page",
+                      (index + 1).toString()
+                    )}`
+                  );
                 }}
               >
                 {index + 1}
@@ -98,7 +82,13 @@ const Pagination = ({ onPage, total, limit }: Props) => {
         <li>
           <button
             onClick={() => {
-              page < Math.ceil(total / limit) && setPage((page) => page + 1);
+              page < Math.ceil(total / limit) &&
+                push(
+                  `${pathname}?${createQueryString(
+                    "page",
+                    (page + 1).toString()
+                  )}`
+                );
               // push(`?page=${page + 1}`);
               // replace(`?${params.toString()}`);
             }}

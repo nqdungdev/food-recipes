@@ -1,44 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Item from "./Item";
 import useSWR, { Fetcher } from "swr";
 import Pagination from "./Pagination";
-import useSWRImmutable from "swr/immutable";
 import Skeleton from "./Skeleton";
+import useContainerDimensions from "@/hooks/useContainerDimensions";
+import { useSearchParams } from "next/navigation";
 
 const Products = () => {
-  const [number, setNumber] = useState(9);
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const ref = useRef(null);
+  const { width } = useContainerDimensions(ref);
+  const number = useRef<number>(12);
   const fetcher: Fetcher<any, string> = (url) =>
     fetch(url).then((res) => res.json());
   const { data, error, isLoading } = useSWR(
-    // `https://api.spoonacular.com/recipes/complexSearch?query=pasta&number=${number}&offset=${
-    //   (page - 1) * 9
-    // }&apiKey=0d3180c799df4f2aac2372cac1093fda`,
-    "",
+    `https://api.spoonacular.com/recipes/complexSearch?query=pasta&number=${
+      number.current
+    }&offset=${
+      ((Number(searchParams.get("page")) || 1) - 1) * number.current
+    }&apiKey=0d3180c799df4f2aac2372cac1093fda`,
+
     fetcher
   );
 
+  useEffect(() => {
+    console.log(width);
+    if (width >= 1024 - 96) number.current = 12;
+    else if (width < 1024 - 96 && width >= 768 - 96) number.current = 9;
+    else if (width < 768 - 96 && width >= 640 - 96) number.current = 8;
+    else number.current = 6;
+    return () => {};
+  }, [width]);
+
   console.log({ data, error, isLoading });
 
-  //search functionality
-  // const [query, setQuery] = useState("");
-
-  // const handleBtns = (label: string) => {
-  //   if (label === "All") {
-  //     setCategory(list);
-  //   } else {
-  //     const filtered = list.filter((item) => item.kind === label);
-  //     setCategory(filtered);
-  //   }
-
-  //   setActiveTab(label);
-  // };
-  if (isLoading) return <Skeleton />;
+  if (isLoading) return <Skeleton number={number.current} />;
   return (
     <>
-      <section className="pt-20 mx-auto w-full min-h-screen bg-primary">
+      <section
+        ref={ref}
+        className="pt-20 mx-auto w-full min-h-screen bg-primary"
+      >
         {/* <section className="px-6 flex flex-row justify-between"> */}
         {/* <div className="flex flex-wrap mt-4 lg:mb-4 mb-8">
             {["All", "African", "American", "Chinese"].map((label, index) => (
@@ -64,13 +68,7 @@ const Products = () => {
           ))}
         </section>
 
-        {data && (
-          <Pagination
-            onPage={() => [page, setPage]}
-            total={data.totalResults}
-            limit={9}
-          />
-        )}
+        {data && <Pagination total={data.totalResults} limit={9} />}
       </section>
     </>
   );

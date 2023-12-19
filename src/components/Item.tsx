@@ -9,13 +9,14 @@ type Props = {
 const Item = ({ recipe }: Props) => {
   return (
     <>
-      <article className="flex flex-row px-6 py-4 md:w-1/2 lg:w-1/3 text-white w-full bg-bgColor">
+      <article className="flex flex-row text-white w-full bg-primary">
         <div className="h-full border-2 border-gray-200 border-opacity-60 rounded-lg overflow-auto max-w-[300px]">
           <Image
             src={recipe.image}
             width={300}
             height={500}
             alt={recipe.title}
+            title={recipe.title}
           />
 
           <div className="px-3 py-2">
